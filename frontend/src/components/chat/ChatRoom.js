@@ -103,14 +103,7 @@ export default function ChatRoom({
 
   const scrollRef = useRef();
 
-  // Prevent crash before chat loads
-  if (!currentChat || !currentUser) {
-    return (
-      <div className="flex items-center justify-center h-full text-gray-500">
-        Select a chat
-      </div>
-    );
-  }
+ 
 
   // Fetch messages
   useEffect(() => {
@@ -158,6 +151,17 @@ export default function ChatRoom({
       setMessages((prev) => [...prev, incomingMessage]);
     }
   }, [incomingMessage]);
+
+   // Prevent crash before chat loads
+  if (!currentChat || !currentUser) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-500">
+        Select a chat
+      </div>
+    );
+  }
+
+
 
   // Send message
   const handleFormSubmit = async (message) => {
