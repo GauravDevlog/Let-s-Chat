@@ -131,19 +131,35 @@ export default function ChatRoom({
 
   // Receive messages
   useEffect(() => {
-    if (!socket?.current) return;
+  const socketCurrent = socket?.current;
 
-    socket.current.on("getMessage", (data) => {
-      setIncomingMessage({
-        senderId: data.senderId,
-        message: data.message,
-      });
+  if (!socketCurrent) return;
+
+  socketCurrent.on("getMessage", (data) => {
+    setIncomingMessage({
+      senderId: data.senderId,
+      message: data.message,
     });
+  });
 
-    return () => {
-      socket.current.off("getMessage");
-    };
-  }, [socket]);
+  return () => {
+    socketCurrent.off("getMessage");
+  };
+}, [socket]);
+  // useEffect(() => {
+  //   if (!socket?.current) return;
+
+  //   socket.current.on("getMessage", (data) => {
+  //     setIncomingMessage({
+  //       senderId: data.senderId,
+  //       message: data.message,
+  //     });
+  //   });
+
+  //   return () => {
+  //     socket.current.off("getMessage");
+  //   };
+  // }, [socket]);
 
   // Add incoming message
   useEffect(() => {
