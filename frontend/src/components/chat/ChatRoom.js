@@ -84,26 +84,17 @@
 // }
 import { useState, useEffect, useRef } from "react";
 
-import {
-  getMessagesOfChatRoom,
-  sendMessage,
-} from "../../services/ChatService";
+import { getMessagesOfChatRoom, sendMessage } from "../../services/ChatService";
 
 import Message from "./Message";
 import Contact from "./Contact";
 import ChatForm from "./ChatForm";
 
-export default function ChatRoom({
-  currentChat,
-  currentUser,
-  socket,
-}) {
+export default function ChatRoom({ currentChat, currentUser, socket }) {
   const [messages, setMessages] = useState([]);
   const [incomingMessage, setIncomingMessage] = useState(null);
 
   const scrollRef = useRef();
-
- 
 
   // Fetch messages
   useEffect(() => {
@@ -131,21 +122,21 @@ export default function ChatRoom({
 
   // Receive messages
   useEffect(() => {
-  const socketCurrent = socket?.current;
+    const socketCurrent = socket?.current;
 
-  if (!socketCurrent) return;
+    if (!socketCurrent) return;
 
-  socketCurrent.on("getMessage", (data) => {
-    setIncomingMessage({
-      senderId: data.senderId,
-      message: data.message,
+    socketCurrent.on("getMessage", (data) => {
+      setIncomingMessage({
+        senderId: data.senderId,
+        message: data.message,
+      });
     });
-  });
 
-  return () => {
-    socketCurrent.off("getMessage");
-  };
-}, [socket]);
+    return () => {
+      socketCurrent.off("getMessage");
+    };
+  }, [socket]);
   // useEffect(() => {
   //   if (!socket?.current) return;
 
@@ -162,13 +153,20 @@ export default function ChatRoom({
   // }, [socket]);
 
   // Add incoming message
+  // useEffect(() => {
+  //   if (incomingMessage) {
+  //     setMessages((prev) => [...prev, incomingMessage]);
+  //   }
+  // }, [incomingMessage]);
   useEffect(() => {
-    if (incomingMessage) {
+    if (
+      incomingMessage &&
+      currentChat?.members?.includes(incomingMessage.senderId)
+    ) {
       setMessages((prev) => [...prev, incomingMessage]);
     }
-  }, [incomingMessage]);
-
-   // Prevent crash before chat loads
+  }, [incomingMessage, currentChat]);
+  // Prevent crash before chat loads
   if (!currentChat || !currentUser) {
     return (
       <div className="flex items-center justify-center h-full text-gray-500">
@@ -177,14 +175,12 @@ export default function ChatRoom({
     );
   }
 
-
-
   // Send message
   const handleFormSubmit = async (message) => {
     if (!message.trim()) return;
 
     const receiverId = currentChat?.members?.find(
-      (member) => member !== currentUser.uid
+      (member) => member !== currentUser.uid,
     );
 
     // Socket message
@@ -201,10 +197,22 @@ export default function ChatRoom({
     };
 
     try {
-      const res = await sendMessage(messageBody);
+      // const res = await sendMessage(messageBody);
 
-      if (res) {
-        setMessages((prev) => [...prev, res]);
+      // if (res) {
+      //   setMessages((prev) => [...prev, res]);
+      // }
+      const tempMessage = {
+        sender: currentUser.uid,
+        message,
+      };
+
+      setMessages((prev) => [...prev, tempMessage]);
+
+      try {
+        await sendMessage(messageBody);
+      } catch (error) {
+        console.log(error);
       }
     } catch (error) {
       console.log(error);
@@ -214,22 +222,15 @@ export default function ChatRoom({
   return (
     <div className="lg:col-span-2 lg:block">
       <div className="w-full">
-
         <div className="p-3 bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700">
-          <Contact
-            chatRoom={currentChat}
-            currentUser={currentUser}
-          />
+          <Contact chatRoom={currentChat} currentUser={currentUser} />
         </div>
 
         <div className="relative w-full p-6 overflow-y-auto h-[30rem] bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700">
           <ul className="space-y-2">
             {messages?.map((message, index) => (
               <div key={index} ref={scrollRef}>
-                <Message
-                  message={message}
-                  self={currentUser.uid}
-                />
+                <Message message={message} self={currentUser.uid} />
               </div>
             ))}
           </ul>
